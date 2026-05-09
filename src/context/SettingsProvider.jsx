@@ -21,7 +21,7 @@ export const SettingsProvider = ({ children }) => {
             const settingsObj = await getSettings();
             setSettings(settingsObj);
             document.documentElement.setAttribute("data-theme", settingsObj.theme);
-            console.log("initial theme: ", settingsObj.theme)
+            console.log("initial theme:", settingsObj.theme)
 
         }
 
