@@ -10,25 +10,19 @@ import { fab } from '@fortawesome/free-brands-svg-icons'
 library.add(fas, far, fab)
 
 import { SettingsContext } from "../context/SettingsContext.js";
+import ThemeIcon from "../components/ThemeIcon.jsx";
 export default function Home() {
     const navigate = useNavigate();
     const {settings, toggleTheme} = useContext(SettingsContext);
     console.log("Settings object:", settings)
     if (!settings) return null;
 
-    const getThemeIcon = () => {
-        console.log(settings.theme)
-        return settings.theme === "light"
-            ? <FontAwesomeIcon icon="fa-solid fa-sun"/>
-            : <FontAwesomeIcon icon="fa-solid fa-moon"/>
-    }
-
     return (
-        <main className="container">
+        <main className="home">
             <h1>Optic Assist</h1>
             <div className="menu-row">
                 <div>
-                    <button onClick={toggleTheme}>{getThemeIcon()}</button>
+                    <button onClick={toggleTheme}>{<ThemeIcon/>}</button>
                     <p>Toggle Theme</p>
                 </div>
                 <div>
