@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "opticassist-app",
+  "productName": "Optic Assist",
   "version": "0.1.0",
-  "identifier": "com.opticassist.app",
+  "identifier": "com.opticassist.desktop",
   "build": {
     "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "opticassist-app",
+        "title": "Optic Assist",
         "width": 800,
         "height": 600
       }
