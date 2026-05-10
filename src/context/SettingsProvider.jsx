@@ -28,6 +28,14 @@ export const SettingsProvider = ({ children }) => {
         loadSettings();
     }, [])
 
+    const setTheme = async (theme) => {
+        const updated = {...settings, theme}
+        setSettings(updated);
+        const root = document.documentElement;
+        root.setAttribute("data-theme", updated.theme)
+        await store.set("settings", updated);
+    }
+
     const toggleTheme = async () => {
         const updatedTheme = settings.theme === "light" ? "dark" : "light";
         const updatedSettings = {
@@ -41,7 +49,7 @@ export const SettingsProvider = ({ children }) => {
 
 
     return(
-        <SettingsContext.Provider value={{settings, toggleTheme}}>
+        <SettingsContext.Provider value={{settings, setTheme, toggleTheme}}>
         {children}
         </SettingsContext.Provider>);
 }
