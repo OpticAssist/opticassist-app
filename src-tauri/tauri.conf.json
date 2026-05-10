@@ -22,6 +22,9 @@
     }
   },
   "bundle": {
+    "macOS": {
+      "entitlements": "src-tauri/entitlements.plist"
+    },
     "active": true,
     "targets": "all",
     "icon": [

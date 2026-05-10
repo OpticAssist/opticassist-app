@@ -26,7 +26,7 @@ export default function Home() {
                     <p>Toggle Theme</p>
                 </div>
                 <div>
-                    <button><FontAwesomeIcon icon="fa-solid fa-camera"/></button>
+                    <button onClick={() => navigate("/camera")}><FontAwesomeIcon icon="fa-solid fa-camera"/></button>
                     <p>Start Optic Assist</p>
                 </div>
                 <div>
