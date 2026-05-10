@@ -10,6 +10,9 @@ export default function Camera() {
     const [cameraReady, setCameraReady] = useState(false);
 
     const capture = () => {
+
+        if (!cameraReady) return;
+
         const imageSrc = webcamRef.current.getScreenshot();
         if(!imageSrc) {
             console.log("Screenshot not ready")
