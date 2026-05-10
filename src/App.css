@@ -105,4 +105,8 @@ h1, h2, p {
   transition: all 0.10s ease-in-out;
 }
 
+li {
+  list-style-type: none;
+}
+
 

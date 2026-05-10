@@ -20,7 +20,7 @@ const Sidebar = () => {
                     <span className="tooltip">Toggle Theme</span>
                 </div>
                 <div className="sidebar-item">
-                    <button><FontAwesomeIcon icon="fa-solid fa-camera"/></button>
+                    <button onClick={() => navigate("/camera")}><FontAwesomeIcon icon="fa-solid fa-camera"/></button>
                     <span className="tooltip">Start Optic Assist</span>
                 </div>
                 <div className="sidebar-item">

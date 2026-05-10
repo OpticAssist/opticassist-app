@@ -26,22 +26,21 @@ export default function Settings() {
 
             <main className="page">
                 <h1>Settings</h1>
-                <div className="settings-item">
-                    <h2>Theme</h2>
-                    <button
-                        onClick={() => setTheme("light")}
-                        style={getThemeButtonStyle("light")}
-                    >Light
-                    </button>
-                    <button
-                        onClick={() => setTheme("dark")}
-                        style={getThemeButtonStyle("dark")}
-                    >Dark
-                    </button>
-
-
-
-                </div>
+                <ul>
+                    <li>
+                        <h2>Theme</h2>
+                        <button
+                            onClick={() => setTheme("light")}
+                            style={getThemeButtonStyle("light")}
+                        >Light
+                        </button>
+                        <button
+                            onClick={() => setTheme("dark")}
+                            style={getThemeButtonStyle("dark")}
+                        >Dark
+                        </button>
+                    </li>
+                </ul>
             </main>
         </div>
     );
