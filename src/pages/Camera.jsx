@@ -3,6 +3,7 @@ import React, {useState} from "react";
 import Webcam from "react-webcam"
 import { useEffect, useRef } from "react";
 import Sidebar from "../components/Sidebar.jsx"
+import { invoke } from "@tauri-apps/api/core";
 
 export default function Camera() {
     const webcamRef = useRef(null);
