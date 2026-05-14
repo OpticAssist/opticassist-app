@@ -19,6 +19,7 @@ export default function Camera() {
             console.log("Screenshot not ready")
             return;
         }
+        // process image
         console.log("Captured image:", imageSrc)
     }
 

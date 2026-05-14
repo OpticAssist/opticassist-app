@@ -5,5 +5,9 @@
 <dict>
     <key>com.apple.security.device.camera</key>
     <true/>
+
+    <key>NSCameraUsageDescription</key>
+    <string>This app requires camera access for object detection.</string>
+
 </dict>
 </plist>
