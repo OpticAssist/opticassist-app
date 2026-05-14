@@ -1,30 +1,31 @@
-
-import React, {useState} from "react";
-import Webcam from "react-webcam"
-import { useEffect, useRef } from "react";
-import Sidebar from "../components/Sidebar.jsx"
-import { invoke } from "@tauri-apps/api/core";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import Webcam from "react-webcam";
+import Sidebar from "../components/Sidebar.jsx";
 
 export default function Camera() {
     const webcamRef = useRef(null);
     const intervalRef = useRef(null);
+
     const [cameraReady, setCameraReady] = useState(false);
 
-    const capture = () => {
-
-        if (!cameraReady) return;
-
-        const imageSrc = webcamRef.current.getScreenshot();
-        if(!imageSrc) {
-            console.log("Screenshot not ready")
+    const capture = useCallback(() => {
+        if (!webcamRef.current) {
+            console.log("No webcam ref");
             return;
         }
-        // process image
-        console.log("Captured image:", imageSrc)
-    }
+
+        const imageSrc = webcamRef.current.getScreenshot();
+
+        if (!imageSrc) {
+            console.log("Screenshot not ready");
+            return;
+        }
+
+        console.log("Captured image:", imageSrc);
+    }, []);
 
     const beginCapturing = () => {
-        if(intervalRef.current) return;
+        if (intervalRef.current) return;
 
         intervalRef.current = setInterval(() => {
             capture();
@@ -32,34 +33,42 @@ export default function Camera() {
     };
 
     useEffect(() => {
+        if (cameraReady) {
+            // small delay so video frames exist
+            setTimeout(() => {
+                beginCapturing();
+            }, 1000);
+        }
+
         return () => {
-            if(intervalRef.current) {
+            if (intervalRef.current) {
                 clearInterval(intervalRef.current);
             }
         };
-    }, []);
+    }, [cameraReady, capture]);
 
-    console.log("mediaDevices:", navigator.mediaDevices);
-    console.log("getUserMedia:", navigator.mediaDevices?.getUserMedia)
-    console.log(window.location.origin)
-    return(
+    return (
         <div className="layout">
             <Sidebar />
+
             <Webcam
-                mirrored={true}
                 ref={webcamRef}
+                mirrored={true}
                 audio={false}
-                videoConstraints={{facingMode: "user"}}
+                screenshotFormat="image/jpeg"
+                videoConstraints={{
+                    facingMode: "user",
+                    width: 640,
+                    height: 480
+                }}
                 onUserMedia={() => {
                     console.log("Camera ready");
                     setCameraReady(true);
-                    beginCapturing();
                 }}
                 onUserMediaError={(err) => {
-                    console.error("Camera error:", err)
+                    console.error("Camera error:", err);
                 }}
-                screenshotFormat={"image/jpeg"}>
-            </Webcam>
+            />
         </div>
-    )
+    );
 }

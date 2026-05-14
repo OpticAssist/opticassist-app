@@ -3,7 +3,8 @@
 "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>com.apple.security.device.camera</key>
-    <true/>
+    <key>NSCameraUsageDescription</key>
+    <string>This app requires camera access for object detection.</string>
+
 </dict>
 </plist>

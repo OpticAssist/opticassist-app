@@ -23,7 +23,8 @@
   },
   "bundle": {
     "macOS": {
-      "entitlements": "entitlements.plist"
+      "entitlements": "entitlements.plist",
+      "infoPlist": "Info.plist"
     },
     "active": true,
     "targets": "all",
