@@ -2,14 +2,14 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RawPrediction {
-    class: String,
+    label: String,
     confidence: f32,
     bounding_box: [f32; 4]
 }
 
 #[derive(Serialize, Debug)]
 pub struct Prediction {
-    class: String,
+    label: String,
     confidence: f32,
     location: String,
 }

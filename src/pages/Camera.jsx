@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Webcam from "react-webcam";
 import Sidebar from "../components/Sidebar.jsx";
+import {processFrame} from "../utils/commands.ts"
 
 export default function Camera() {
     const webcamRef = useRef(null);
@@ -22,7 +23,14 @@ export default function Camera() {
         }
 
         console.log("Captured image:", imageSrc);
-    }, []);
+        let prediction;
+        processFrame(imageSrc)
+            .then((p) => {prediction = p})
+            .catch((e) => {console.error("Processing frame failed:", e)})
+            console.log("Prediction object:", prediction)
+    }, []
+    );
+
 
     const beginCapturing = () => {
         if (intervalRef.current) return;

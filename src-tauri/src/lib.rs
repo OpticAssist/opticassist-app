@@ -1,29 +1,33 @@
 mod predictions;
-pub use predictions::{ RawPrediction, Prediction };
+use predictions::{ RawPrediction, Prediction };
 use std::process::Command;
-use std::env::consts::OS;
 use std::path::{ PathBuf };
-use std::convert::From;
 
 #[tauri::command]
 fn process_frame(frame_b64: String) -> Result<Prediction, String> {
+    // get expected model path at models/model(.exe)
     let mut model_path = PathBuf::new();
     model_path.push("..");
     model_path.push("models");
     model_path.push("model");
-    if OS == "windows" {
-        model_path.set_extension("exe");
-    }
 
+    // add a .exe extension if on Windows
+    #[cfg(target_os="windows")]
+    model_path.set_extension("exe");
+
+    // send base64 input to the model and retrieve its output
     let model_output =
         Command::new(model_path).arg(frame_b64).output()
             .map_err(|e| {e.to_string()})?;
 
+    // get JSON string from python's stdout
     let json_str = String::from_utf8_lossy(&model_output.stdout).to_string();
 
+    // convert string data to an object
     let raw_obj: RawPrediction = serde_json::from_str(json_str.as_str())
         .map_err(|e| {e.to_string()})?;
 
+    // simplify the prediction for use in JS
     let prediction: Prediction = raw_obj.into();
 
     Ok(prediction)
