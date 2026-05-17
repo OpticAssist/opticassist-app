@@ -1,10 +1,12 @@
 mod predictions;
+mod message;
 use predictions::{ RawPrediction, Prediction };
+use message::Message;
 use std::process::Command;
 use std::path::{ PathBuf };
 
 #[tauri::command]
-fn process_frame(frame_b64: String) -> Result<Prediction, String> {
+fn process_frame(frame_b64: String) -> Result<Vec<Prediction>, String> {
     // get expected model path at models/model(.exe)
     let mut model_path = PathBuf::new();
     model_path.push("..");
@@ -23,14 +25,21 @@ fn process_frame(frame_b64: String) -> Result<Prediction, String> {
     // get JSON string from python's stdout
     let json_str = String::from_utf8_lossy(&model_output.stdout).to_string();
 
-    // convert string data to an object
-    let raw_obj: RawPrediction = serde_json::from_str(json_str.as_str())
+    // convert string data to a Message
+    let message: Message = serde_json::from_str(json_str.as_str())
         .map_err(|e| {e.to_string()})?;
 
-    // simplify the prediction for use in JS
-    let prediction: Prediction = raw_obj.into();
-
-    Ok(prediction)
+    match message {
+        Message::Status {msg} => {todo!()},
+        Message::Output {image_shape, raw_predictions} => {
+            let mut predictions: Vec<Prediction> = Vec::new();
+            for rp in raw_predictions {
+                predictions.push(rp.into_prediction(image_shape));
+            }
+            Ok(predictions)
+        },
+        Message::Error {msg} => {Err(msg)},
+    }
     }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
