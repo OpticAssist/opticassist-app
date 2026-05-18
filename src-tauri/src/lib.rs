@@ -1,9 +1,55 @@
 mod predictions;
 mod message;
-use predictions::{ RawPrediction, Prediction };
+use predictions::{ Prediction };
+use std::io::{BufRead, BufReader};
 use message::Message;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::path::{ PathBuf };
+
+fn run_model(frame_b64: String) {
+    let mut model_path = PathBuf::new();
+    model_path.push("..");
+    model_path.push("models");
+    model_path.push("model");
+
+    // add a .exe extension if on Windows
+    #[cfg(target_os="windows")]
+    model_path.set_extension("exe");
+
+    let mut model = Command::new(model_path)
+        .arg(frame_b64)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let stdin = model.stdin.as_mut().unwrap();
+    let stdout = model.stdout.take().unwrap();
+
+    let reader = BufReader::new(stdout);
+
+    std::thread::spawn(move || {
+        for line_result in reader.lines() {
+            match line_result {
+                Ok(line) => {
+                    if let Ok(message_res) = serde_json::from_str::<Message>(line.as_str()) {
+                        
+                    }
+                    // uh oh
+                }
+                Err(e) => {
+                    eprintln!("Failed reading stdout: {}", e);
+                    break;
+                }
+            }
+        }
+
+    });
+
+
+
+todo!()
+}
 
 #[tauri::command]
 fn process_frame(frame_b64: String) -> Result<Vec<Prediction>, String> {
