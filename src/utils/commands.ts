@@ -4,6 +4,7 @@ type Prediction = {
     label: string;
     confidence: number;
     location: string;
+    color: string;
 };
 
 export async function processFrame(frameB64: string) {
