@@ -5,7 +5,7 @@ pub struct RawPrediction {
     pub label: String,
     pub confidence: f32,
     pub bounding_box: [f32; 4],
-    pub average_rgb: [u8; 3]
+    pub raw_rgb: [u8; 3]
 
 }
 
@@ -58,22 +58,13 @@ impl RawPrediction {
             format!("{}-{}", vertical_area, horizontal_area)
         };
 
-        let color = format!(
-            "rgb({}, {}, {})",
-            self.average_rgb[0],
-            self.average_rgb[1],
-            self.average_rgb[2]
-        );
+        let nearest_color = color::similar(self.raw_rgb);
 
-        Prediction {
-            label: self.label,
-            confidence: self.confidence,
-            location,
-            color,
-        }
+        Prediction::new(self.label, self.confidence, location, nearest_color)
 
     }
 }
+
 
 #[derive(Serialize, Debug)]
 pub struct Prediction {
@@ -81,4 +72,10 @@ pub struct Prediction {
     pub confidence: f32,
     pub location: String,
     pub color: String,
+}
+
+impl Prediction{
+    pub fn new(label: String, confidence: f32, location: String, color: String) -> Self {
+        Prediction {label, confidence, location, color}
+    }
 }
