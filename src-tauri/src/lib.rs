@@ -2,11 +2,14 @@ mod predictions;
 mod message;
 use predictions::{ Prediction };
 use std::io::{BufRead, BufReader};
-use message::Message;
-use std::process::{Command, Stdio};
+use message::{Message, send_event};
+use std::process::{Child, Command, Stdio};
 use std::path::{ PathBuf };
+use tauri::{AppHandle, Emitter};
+use crate::message::EventError;
 
-fn run_model(frame_b64: String) {
+#[tauri::command]
+fn run_model(app: AppHandle) {
     let mut model_path = PathBuf::new();
     model_path.push("..");
     model_path.push("models");
@@ -16,15 +19,30 @@ fn run_model(frame_b64: String) {
     #[cfg(target_os="windows")]
     model_path.set_extension("exe");
 
-    let mut model = Command::new(model_path)
-        .arg(frame_b64)
+    let mut model: Child;
+
+    match Command::new(model_path)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .spawn()
-        .unwrap();
+        .spawn() {
+        Ok(m) => {
+            model = m;
+        }
+        Err(model_err) => {
+            let err_obj = Message::Error {message: format!("Model failed to start: {model_err}")};
+            send_event(app, err_obj).unwrap();
+            return;
+        }
+    }
 
     let stdin = model.stdin.as_mut().unwrap();
     let stdout = model.stdout.take().unwrap();
+
+    if let Err(_) = app.emit("status", Message::Status {message: "loading".to_string()}) {
+        eprintln!("failed to send loading status event to JS");
+    } else {
+        println!("sent loading status event to JS");
+    }
 
     let reader = BufReader::new(stdout);
 
@@ -32,10 +50,13 @@ fn run_model(frame_b64: String) {
         for line_result in reader.lines() {
             match line_result {
                 Ok(line) => {
-                    if let Ok(message_res) = serde_json::from_str::<Message>(line.as_str()) {
-                        
+                    if let Ok(message) = serde_json::from_str::<Message>(line.as_str()) {
+                        match message {
+                            _ => {todo!()}
+                        }
+                    } else {
+                        // send error event
                     }
-                    // uh oh
                 }
                 Err(e) => {
                     eprintln!("Failed reading stdout: {}", e);
@@ -76,7 +97,7 @@ fn process_frame(frame_b64: String) -> Result<Vec<Prediction>, String> {
         .map_err(|e| {e.to_string()})?;
 
     match message {
-        Message::Status {msg} => {todo!()},
+        Message::Status {message} => {todo!()},
         Message::Output {image_shape, raw_predictions} => {
             let mut predictions: Vec<Prediction> = Vec::new();
             for rp in raw_predictions {
@@ -84,7 +105,7 @@ fn process_frame(frame_b64: String) -> Result<Vec<Prediction>, String> {
             }
             Ok(predictions)
         },
-        Message::Error {msg} => {Err(msg)},
+        Message::Error {message} => {Err(message)},
     }
     }
 
@@ -93,7 +114,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![process_frame])
+        .invoke_handler(tauri::generate_handler![process_frame, run_model])
         // commands added here with .invoke_handler(tauri::generate_handler![function_name])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
