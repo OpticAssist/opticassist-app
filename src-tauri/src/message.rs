@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 use tauri::{AppHandle, Emitter};
 use crate::predictions::RawPrediction;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag="kind")]
 pub enum Message {
     #[serde(rename="status")]
@@ -27,7 +27,7 @@ pub enum EventError {
     },
 }
 
-pub fn send_event(app: AppHandle, event: Message) -> Result<(), EventError> {
+pub fn send_event(app: &AppHandle, event: Message) -> Result<(), EventError> {
     match &event {
         Message::Status { .. } => {
             if let Err(_) = app.emit("status", event) {
@@ -41,7 +41,7 @@ pub fn send_event(app: AppHandle, event: Message) -> Result<(), EventError> {
             Err(EventError::InvalidVariant {message: "unexpected Message::Output: model output should be sent through channels".to_string()})
         },
         Message::Error { .. } => {
-            if let Err(_) = app.emit("model-message", event) {
+            if let Err(_) = app.emit("error", event) {
                 eprintln!("failed to send model failure event to JS");
             } else {
                 println!("sent model failure event to JS");

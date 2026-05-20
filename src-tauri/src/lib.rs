@@ -5,11 +5,11 @@ use std::io::{BufRead, BufReader};
 use message::{Message, send_event};
 use std::process::{Child, Command, Stdio};
 use std::path::{ PathBuf };
-use tauri::{AppHandle, Emitter};
-use crate::message::EventError;
+use tauri::AppHandle;
+use tauri::ipc::Channel;
 
 #[tauri::command]
-fn run_model(app: AppHandle) {
+fn run_model(app: AppHandle, channel: Channel<Message>) {
     let mut model_path = PathBuf::new();
     model_path.push("..");
     model_path.push("models");
@@ -30,7 +30,7 @@ fn run_model(app: AppHandle) {
         }
         Err(model_err) => {
             let err_obj = Message::Error {message: format!("Model failed to start: {model_err}")};
-            send_event(app, err_obj).unwrap();
+            send_event(&app, err_obj).unwrap();
             return;
         }
     }
@@ -38,11 +38,7 @@ fn run_model(app: AppHandle) {
     let stdin = model.stdin.as_mut().unwrap();
     let stdout = model.stdout.take().unwrap();
 
-    if let Err(_) = app.emit("status", Message::Status {message: "loading".to_string()}) {
-        eprintln!("failed to send loading status event to JS");
-    } else {
-        println!("sent loading status event to JS");
-    }
+    send_event(&app, Message::Status {message: "loading".to_string()}).unwrap();
 
     let reader = BufReader::new(stdout);
 
@@ -52,10 +48,20 @@ fn run_model(app: AppHandle) {
                 Ok(line) => {
                     if let Ok(message) = serde_json::from_str::<Message>(line.as_str()) {
                         match message {
-                            _ => {todo!()}
+                            Message::Output { .. } => {
+                                if channel.send(message).is_err() {
+                                    let err = Message::Error {message: "failed to send model output through channel".to_string()};
+                                    send_event(&app,err).unwrap();
+                                }
+                            },
+                            _ => {
+                                send_event(&app, message).unwrap();
+                            }
                         }
                     } else {
                         // send error event
+                        let err = Message::Error {message: format!("serde failed to deserialize model output: {}", line)};
+                        send_event(&app, err).unwrap();
                     }
                 }
                 Err(e) => {
@@ -66,8 +72,6 @@ fn run_model(app: AppHandle) {
         }
 
     });
-
-
 
 todo!()
 }
