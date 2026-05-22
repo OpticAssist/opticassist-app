@@ -1,11 +1,11 @@
 mod predictions;
 mod message;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write};
 use std::sync::Mutex;
 use message::{Message, send_event};
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 use std::path::{ PathBuf };
-use tauri::{AppHandle, Listener};
+use tauri::AppHandle;
 use tauri::ipc::Channel;
 
 struct ModelState {
@@ -83,6 +83,19 @@ fn listen_to_model(reader: BufReader<ChildStdout>, channel: Channel<Message>, ap
     }
 }
 
+#[tauri::command]
+fn send_frame(frame: String, state: tauri::State<'_, ModelState>) -> Result<(), String> {
+    let mut stdin_state = state.stdin.lock().unwrap();
+    if let Some(stdin) = stdin_state.as_mut() {
+        writeln!(stdin, "{frame}")
+            .map_err(|e| {
+                format!("failed to write to model's stdin: {e}")
+            })?;
+    } else {
+        return Err("model is not running: call start_model before sending frames.".to_string())
+    }
+    Ok(())
+}
 fn model_path() -> PathBuf {
     let mut model_path = PathBuf::new();
     model_path.push("..");
@@ -104,7 +117,7 @@ pub fn run() {
         })
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![start_model]) // add new commands to the list
+        .invoke_handler(tauri::generate_handler![start_model, send_frame]) // add new commands to the list
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
