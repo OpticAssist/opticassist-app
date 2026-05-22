@@ -2,7 +2,6 @@ mod predictions;
 mod message;
 use std::io::{BufRead, BufReader, Write};
 use std::sync::Mutex;
-use serde_json::Value;
 use message::{Message, send_event};
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 use std::path::{ PathBuf };
@@ -62,7 +61,7 @@ fn listen_to_model(reader: BufReader<ChildStdout>, channel: Channel<Message>, ap
                     match message {
                         Message::Output { .. } => {
                             if channel.send(message).is_err() {
-                                let err = Message::Error {message: "failed to send model output through channel".to_string()};
+                                let err = Message::Error {message: "Failed to send model output through channel".to_string()};
                                 send_event(&app,err).unwrap();
                             }
                         },
@@ -72,7 +71,7 @@ fn listen_to_model(reader: BufReader<ChildStdout>, channel: Channel<Message>, ap
                     }
                 } else {
                     // send error event
-                    let err = Message::Error {message: format!("serde failed to deserialize model output: {}", line)};
+                    let err = Message::Error {message: format!("Serde failed to deserialize model output: {}", line)};
                     send_event(&app, err).unwrap();
                 }
             }
@@ -90,10 +89,10 @@ fn send_frame(frame: String, state: tauri::State<'_, ModelState>) -> Result<(), 
     if let Some(stdin) = stdin_state.as_mut() {
         writeln!(stdin, "{frame}")
             .map_err(|e| {
-                format!("failed to write to model's stdin: {e}")
+                format!("Failed to write to model's stdin: {e}")
             })?;
     } else {
-        return Err("model is not running: call start_model before sending frames.".to_string())
+        return Err("Model is not running: call start_model before sending frames.".to_string())
     }
     Ok(())
 }
@@ -103,7 +102,8 @@ fn stop_model(state: tauri::State<'_, ModelState>) -> Result<(), String> {
     let mut stdin_state = state.stdin.lock().unwrap();
     if let Some(mut stdin) = stdin_state.take() {
         let exit_message = Message::Status {message: "exit".to_string()};
-        let exit_json = serde_json::json!(exit_message).to_string();
+        let exit_json = serde_json::to_string(&exit_message)
+            .map_err(|e| {format!("Serde failed to serialize exit message: {e}")})?;
         if let Err(e) = writeln!(stdin, "{exit_json}") {
             eprintln!("Failed to send exit signal to model: {e}");
         }
