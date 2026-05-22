@@ -9,6 +9,9 @@ pub enum Message {
     Status {
         message: String
     },
+    Input {
+        image: String
+    },
     #[serde(rename="output")]
     Output {
         image_shape: [u32; 2],
@@ -37,6 +40,9 @@ pub fn send_event(app: &AppHandle, event: Message) -> Result<(), EventError> {
             }
             Ok(())
         },
+        Message::Input {..} => {
+            Err(EventError::InvalidVariant {message: "unexpected Message::Input: model input should not be sent to the frontend".to_string()})
+        }
         Message::Output { .. } => {
             Err(EventError::InvalidVariant {message: "unexpected Message::Output: model output should be sent through channels".to_string()})
         },

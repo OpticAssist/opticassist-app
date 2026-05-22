@@ -1,23 +1,25 @@
 mod predictions;
 mod message;
-use predictions::{ Prediction };
 use std::io::{BufRead, BufReader};
+use std::sync::Mutex;
 use message::{Message, send_event};
-use std::process::{Child, Command, Stdio};
+use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 use std::path::{ PathBuf };
-use tauri::AppHandle;
+use tauri::{AppHandle, Listener};
 use tauri::ipc::Channel;
 
-#[tauri::command]
-fn run_model(app: AppHandle, channel: Channel<Message>) {
-    let mut model_path = PathBuf::new();
-    model_path.push("..");
-    model_path.push("models");
-    model_path.push("model");
+struct ModelState {
+    stdin: Mutex<Option<ChildStdin>>
+}
 
-    // add a .exe extension if on Windows
-    #[cfg(target_os="windows")]
-    model_path.set_extension("exe");
+#[tauri::command]
+fn start_model(
+    app: AppHandle,
+    channel: Channel<Message>,
+    state: tauri::State<'_, ModelState>)
+    -> Result<(), String>
+{
+    let model_path = model_path();
 
     let mut model: Child;
 
@@ -29,56 +31,59 @@ fn run_model(app: AppHandle, channel: Channel<Message>) {
             model = m;
         }
         Err(model_err) => {
-            let err_obj = Message::Error {message: format!("Model failed to start: {model_err}")};
-            send_event(&app, err_obj).unwrap();
-            return;
+            return Err(format!("Model failed to start: {model_err}"))
         }
     }
 
-    let stdin = model.stdin.as_mut().unwrap();
+    let stdin = model.stdin.take().unwrap(); // real model stdin
     let stdout = model.stdout.take().unwrap();
+
+    { // create a scope to remove the lock automatically after state is updated
+        let mut stdin_state = state.stdin.lock().unwrap(); // prev stdin
+        *stdin_state = Some(stdin);
+    }
 
     send_event(&app, Message::Status {message: "loading".to_string()}).unwrap();
 
     let reader = BufReader::new(stdout);
 
     std::thread::spawn(move || {
-        for line_result in reader.lines() {
-            match line_result {
-                Ok(line) => {
-                    if let Ok(message) = serde_json::from_str::<Message>(line.as_str()) {
-                        match message {
-                            Message::Output { .. } => {
-                                if channel.send(message).is_err() {
-                                    let err = Message::Error {message: "failed to send model output through channel".to_string()};
-                                    send_event(&app,err).unwrap();
-                                }
-                            },
-                            _ => {
-                                send_event(&app, message).unwrap();
-                            }
-                        }
-                    } else {
-                        // send error event
-                        let err = Message::Error {message: format!("serde failed to deserialize model output: {}", line)};
-                        send_event(&app, err).unwrap();
-                    }
-                }
-                Err(e) => {
-                    eprintln!("Failed reading stdout: {}", e);
-                    break;
-                }
-            }
-        }
-
+        listen_to_model(reader, channel, app);
     });
-
-todo!()
+    Ok(())
 }
 
-#[tauri::command]
-fn process_frame(frame_b64: String) -> Result<Vec<Prediction>, String> {
-    // get expected model path at models/model(.exe)
+fn listen_to_model(reader: BufReader<ChildStdout>, channel: Channel<Message>, app: AppHandle) {
+    for line_result in reader.lines() {
+        match line_result {
+            Ok(line) => {
+                if let Ok(message) = serde_json::from_str::<Message>(line.as_str()) {
+                    match message {
+                        Message::Output { .. } => {
+                            if channel.send(message).is_err() {
+                                let err = Message::Error {message: "failed to send model output through channel".to_string()};
+                                send_event(&app,err).unwrap();
+                            }
+                        },
+                        _ => {
+                            send_event(&app, message).unwrap();
+                        }
+                    }
+                } else {
+                    // send error event
+                    let err = Message::Error {message: format!("serde failed to deserialize model output: {}", line)};
+                    send_event(&app, err).unwrap();
+                }
+            }
+            Err(e) => {
+                eprintln!("Failed reading stdout: {}", e);
+                break;
+            }
+        }
+    }
+}
+
+fn model_path() -> PathBuf {
     let mut model_path = PathBuf::new();
     model_path.push("..");
     model_path.push("models");
@@ -88,38 +93,18 @@ fn process_frame(frame_b64: String) -> Result<Vec<Prediction>, String> {
     #[cfg(target_os="windows")]
     model_path.set_extension("exe");
 
-    // send base64 input to the model and retrieve its output
-    let model_output =
-        Command::new(model_path).arg(frame_b64).output()
-            .map_err(|e| {e.to_string()})?;
-
-    // get JSON string from python's stdout
-    let json_str = String::from_utf8_lossy(&model_output.stdout).to_string();
-
-    // convert string data to a Message
-    let message: Message = serde_json::from_str(json_str.as_str())
-        .map_err(|e| {e.to_string()})?;
-
-    match message {
-        Message::Status {message} => {todo!()},
-        Message::Output {image_shape, raw_predictions} => {
-            let mut predictions: Vec<Prediction> = Vec::new();
-            for rp in raw_predictions {
-                predictions.push(rp.into_prediction(image_shape));
-            }
-            Ok(predictions)
-        },
-        Message::Error {message} => {Err(message)},
-    }
-    }
+    model_path
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(ModelState {
+            stdin: Mutex::new(None) // initialize ModelState
+        })
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![process_frame, run_model])
-        // commands added here with .invoke_handler(tauri::generate_handler![function_name])
+        .invoke_handler(tauri::generate_handler![start_model]) // add new commands to the list
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
