@@ -2,6 +2,7 @@ mod predictions;
 mod message;
 use std::io::{BufRead, BufReader, Write};
 use std::sync::Mutex;
+use serde_json::Value;
 use message::{Message, send_event};
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 use std::path::{ PathBuf };
@@ -96,6 +97,23 @@ fn send_frame(frame: String, state: tauri::State<'_, ModelState>) -> Result<(), 
     }
     Ok(())
 }
+
+#[tauri::command]
+fn stop_model(state: tauri::State<'_, ModelState>) -> Result<(), String> {
+    let mut stdin_state = state.stdin.lock().unwrap();
+    if let Some(mut stdin) = stdin_state.take() {
+        let exit_message = Message::Status {message: "exit".to_string()};
+        let exit_json = serde_json::json!(exit_message).to_string();
+        if let Err(e) = writeln!(stdin, "{exit_json}") {
+            eprintln!("Failed to send exit signal to model: {e}");
+        }
+        stdin.flush().map_err(|e| {format!("Flushing model stdin failed: {e}")})?;
+        Ok(())
+    } else {
+        Err("No model process running".to_string())
+    }
+}
+
 fn model_path() -> PathBuf {
     let mut model_path = PathBuf::new();
     model_path.push("..");
@@ -117,7 +135,7 @@ pub fn run() {
         })
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![start_model, send_frame]) // add new commands to the list
+        .invoke_handler(tauri::generate_handler![start_model, send_frame, stop_model]) // add new commands to the list
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
