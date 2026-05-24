@@ -5,7 +5,7 @@ pub struct RawPrediction {
     pub label: String,
     pub confidence: f32,
     pub bounding_box: [f32; 4],
-    pub raw_rgb: [u8; 3]
+    pub color: String
 
 }
 
@@ -58,9 +58,9 @@ impl RawPrediction {
             format!("{}-{}", vertical_area, horizontal_area)
         };
 
-        let nearest_color = color::similar(self.raw_rgb);
 
-        Prediction::new(self.label, self.confidence, location, nearest_color)
+
+        Prediction::new(self.label, self.confidence, location, self.color)
 
     }
 }
