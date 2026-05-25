@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use std::convert::From;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RawPrediction {
@@ -75,10 +76,31 @@ impl RawPrediction {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Prediction {
     pub label: String,
     pub confidence: f32,
     pub location: String,
     pub color: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct RawOutput {
+    pub image_shape: [u32; 2],
+    pub raw_predictions: Vec<RawPrediction>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Output {
+    pub predictions: Vec<Prediction>
+}
+
+impl From<RawOutput> for Output {
+    fn from(output: RawOutput) -> Self {
+        let predictions = output.raw_predictions
+            .into_iter()
+            .map(|rp| rp.into_prediction(output.image_shape))
+            .collect();
+        Output { predictions }
+    }
 }
