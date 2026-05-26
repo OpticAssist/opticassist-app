@@ -1,6 +1,5 @@
-import React, {useContext, useState} from "react";
+import React, {useContext} from "react";
 import { useNavigate } from "react-router-dom";
-import { invoke } from "@tauri-apps/api/core";
 import "../App.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -9,7 +8,7 @@ import { far } from '@fortawesome/free-regular-svg-icons'
 import { fab } from '@fortawesome/free-brands-svg-icons'
 library.add(fas, far, fab)
 
-import { SettingsContext } from "../context/SettingsContext.js";
+import { SettingsContext } from "../context/SettingsContext.ts";
 import ThemeIcon from "../components/ThemeIcon.jsx";
 export default function Home() {
     const navigate = useNavigate();

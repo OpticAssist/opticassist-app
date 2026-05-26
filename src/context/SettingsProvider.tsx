@@ -1,21 +1,27 @@
+import React from 'react'
 import {LazyStore} from "@tauri-apps/plugin-store";
-import { useEffect } from 'react';
+import {ReactNode, useEffect} from 'react';
 import { useState } from 'react';
-import { SettingsContext } from "./SettingsContext.js"
+import { SettingsContext } from "./SettingsContext.ts"
+import {Settings} from "../utils/types.ts";
 
 const store = new LazyStore("settings.json");
 
-// if you are changing this, also change the one in SettingsContext.js
-const DEFAULT_SETTINGS = {
+// if you are changing this, also change the one in SettingsContext.ts
+const DEFAULT_SETTINGS: Settings = {
     theme: "light"
 }
 
-async function getSettings() {
+async function getSettings(): Promise<Settings> {
     return (await store.get("settings")) ?? DEFAULT_SETTINGS
 }
 
-export const SettingsProvider = ({ children }) => {
-    const [settings, setSettings] = useState(DEFAULT_SETTINGS)
+interface SettingsProviderProps {
+    children: ReactNode
+}
+
+export const SettingsProvider = ({ children }: SettingsProviderProps) => {
+    const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
     useEffect(() => {
         async function loadSettings() {
             const settingsObj = await getSettings();
@@ -25,10 +31,10 @@ export const SettingsProvider = ({ children }) => {
 
         }
 
-        loadSettings();
+        loadSettings().then(() => console.log("Settings loaded"))
     }, [])
 
-    const setTheme = async (theme) => {
+    const setTheme = async (theme: "light" | "dark") => {
         const updated = {...settings, theme}
         setSettings(updated);
         const root = document.documentElement;
@@ -38,7 +44,7 @@ export const SettingsProvider = ({ children }) => {
 
     const toggleTheme = async () => {
         const updatedTheme = settings.theme === "light" ? "dark" : "light";
-        const updatedSettings = {
+        const updatedSettings: Settings = {
             ...settings, theme: updatedTheme
         };
         setSettings(updatedSettings);

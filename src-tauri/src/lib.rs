@@ -48,8 +48,6 @@ fn start_model(
         *child_state = Some(model);
     }
 
-    send_event(&app, Message::Status {message: "loading".to_string()}).unwrap();
-
     let reader = BufReader::new(stdout);
 
     thread::spawn(move || {

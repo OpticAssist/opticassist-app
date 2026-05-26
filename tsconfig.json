@@ -4,6 +4,8 @@
     "lib": ["ES2020", "DOM"],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "strict": true
+    "strict": true,
+    "jsx": "react",
+    "allowImportingTsExtensions": true,
   }
 }

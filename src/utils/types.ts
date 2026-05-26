@@ -1,3 +1,13 @@
+export interface SettingsContextType {
+    settings: Settings;
+    setTheme: (theme: "light" | "dark") => Promise<void>;
+    toggleTheme: () => Promise<void>;
+}
+
+export interface Settings {
+    theme: "light" | "dark";
+}
+
 export interface Prediction {
     label: string;
     confidence: number;
@@ -5,6 +15,8 @@ export interface Prediction {
     color: string;
 }
 
-// export type Message =
-//     { kind: "status", message: string } |
-//     { kind: "error", image_shape: [number, number], raw_predictions}
+export type Message =
+    { kind: "status", message: string } |
+    { kind: "input", image: String } |
+    { kind: "output", predictions: [Prediction] } |
+    { kind: "error", message: string };
