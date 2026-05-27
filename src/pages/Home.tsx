@@ -2,11 +2,7 @@ import React, {useContext} from "react";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { fas } from '@fortawesome/free-solid-svg-icons'
-import { far } from '@fortawesome/free-regular-svg-icons'
-import { fab } from '@fortawesome/free-brands-svg-icons'
-library.add(fas, far, fab)
+import {faCamera, faGear} from "@fortawesome/free-solid-svg-icons"
 
 import { SettingsContext } from "../context/SettingsContext.ts";
 import ThemeIcon from "../components/ThemeIcon.jsx";
@@ -25,11 +21,11 @@ export default function Home() {
                     <p>Toggle Theme</p>
                 </div>
                 <div>
-                    <button onClick={() => navigate("/camera")}><FontAwesomeIcon icon="fa-solid fa-camera"/></button>
+                    <button onClick={() => navigate("/camera")}><FontAwesomeIcon icon={faCamera}/></button>
                     <p>Start Optic Assist</p>
                 </div>
                 <div>
-                    <button onClick={() => navigate("/settings")}><FontAwesomeIcon icon="fa-solid fa-gear"/></button>
+                    <button onClick={() => navigate("/settings")}><FontAwesomeIcon icon={faGear}/></button>
                     <p>Settings</p>
                 </div>
 

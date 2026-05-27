@@ -1,6 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
 import { Channel } from "@tauri-apps/api/core";
-import { listen } from '@tauri-apps/api/event';
 import { Message } from "./types";
 
 export async function startModel(onMessage: (msg: Message) => void) {

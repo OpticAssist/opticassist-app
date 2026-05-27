@@ -3,7 +3,7 @@ import {faCamera, faGear} from "@fortawesome/free-solid-svg-icons"
 import React from "react";
 import { useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
-import ThemeIcon from "./ThemeIcon.jsx"
+import ThemeIcon from "./ThemeIcon.tsx"
 
 import { SettingsContext } from "../context/SettingsContext.ts";
 

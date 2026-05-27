@@ -10,7 +10,7 @@ export default function Settings() {
         return null;
     }
 
-    const getThemeButtonStyle = (themeName) => {
+    const getThemeButtonStyle = (themeName: "light" | "dark") => {
         return({
                 backgroundColor:
                     settings.theme === themeName ? "#26213f" : "white",
