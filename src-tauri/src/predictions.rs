@@ -5,9 +5,8 @@ use std::convert::From;
 pub struct RawPrediction {
     pub label: String,
     pub confidence: f32,
-    pub bounding_box: [f32; 4],
-    pub average_rgb: [u8; 3]
-
+    pub bounding_box: [i32; 4],
+    pub color: String
 }
 
 impl RawPrediction {
@@ -15,18 +14,18 @@ impl RawPrediction {
         let img_height = image_shape[0] as f32;
         let img_width = image_shape[1] as f32;
 
-        let x1 = self.bounding_box[0];
-        let y1 = self.bounding_box[1];
-        let x2 = self.bounding_box[2];
-        let y2 = self.bounding_box[3];
+        let x1 = self.bounding_box[0] as f32;
+        let y1 = self.bounding_box[1] as f32;
+        let x2 = self.bounding_box[2] as f32;
+        let y2 = self.bounding_box[3] as f32;
 
         let center_x = (x1 + x2) / 2.0;
         let center_y = (y1 + y2) / 2.0;
 
-         // finding the location of the image formatted as (left/right - top/bottom) or just middle
+        // finding the location of the image formatted as (left/right - top/bottom) or just middle
         // Compares the center of the object to the total width of the image.
-        // The numbers can be changed, I just thought 0.25 and 0.65 are good enough.
-        // If it's middle, it's just middle and if it's middle and top or bottom, it'll just top or bottom
+        // The numbers can be changed; I just thought 0.25 and 0.65 are good enough.
+        // If it's middle, it's just middle, and if it's middle and top or bottom, it'll just top or bottom
         // added color formatted to rgb and added that to the struct as well
         let horizontal_mummy = center_x / img_width;
         let horizontal_area = if horizontal_mummy < 0.35 {
@@ -58,21 +57,8 @@ impl RawPrediction {
         else {
             format!("{}-{}", vertical_area, horizontal_area)
         };
-
-        let color = format!(
-            "rgb({}, {}, {})",
-            self.average_rgb[0],
-            self.average_rgb[1],
-            self.average_rgb[2]
-        );
-
-        Prediction {
-            label: self.label,
-            confidence: self.confidence,
-            location,
-            color,
-        }
-
+        
+        Prediction::new(self.label, self.confidence, location, self.color)
     }
 }
 
@@ -82,6 +68,12 @@ pub struct Prediction {
     pub confidence: f32,
     pub location: String,
     pub color: String,
+}
+
+impl Prediction {
+    pub fn new(label: String, confidence: f32, location: String, color: String) -> Self {
+        Prediction {label, confidence, location, color}
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

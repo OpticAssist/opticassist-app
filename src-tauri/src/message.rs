@@ -9,6 +9,7 @@ pub enum Message {
     Status {
         message: String
     },
+    #[serde(rename="input")]
     Input {
         image: String
     },
