@@ -2,12 +2,14 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import Webcam from "react-webcam";
 import Sidebar from "../components/Sidebar.jsx";
 import {startModel, sendFrame, stopModel} from "../utils/commands.ts"
+import {Message, messageToString} from "../utils/types.ts";
 
 export default function Camera() {
     const webcamRef = useRef<Webcam>(null);
     const intervalRef = useRef<number>(null);
 
     const [cameraReady, setCameraReady] = useState(false);
+    const [message, setMessage] = useState<Message>();
 
     const capture = useCallback(() => {
             if (!webcamRef.current) {
@@ -72,9 +74,8 @@ export default function Camera() {
                 onUserMedia={() => {
                     console.log("Camera ready, starting model");
                     startModel((m) => {
-                        switch(m.kind) {
-                            
-                        }
+                        setMessage(m);
+
                     })
                     setCameraReady(true);
                 }}
@@ -82,6 +83,8 @@ export default function Camera() {
                     console.error("Camera error:", err);
                 }}
             />
+            <h1>Model Output: </h1>
+             {!message? <p> No Output </p>:<p>{messageToString(message)}</p>}
         </div>
     );
 }

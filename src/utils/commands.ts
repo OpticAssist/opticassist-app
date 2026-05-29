@@ -5,16 +5,6 @@ import { Message } from "./types";
 export async function startModel(onMessage: (msg: Message) => void) {
     const outputChannel = new Channel<Message>();
 
-    // (msg: Message) => {
-    //     switch(msg.kind) {
-    //         case "output":
-    //             predictions=msg.predictions;
-    //             break;
-    //         default:
-    //             console.error(`Expected output from channel, received ${msg.kind}`);
-    //     }
-    // }
-
     outputChannel.onmessage = onMessage;
 
     return await invoke("start_model", {channel: outputChannel})

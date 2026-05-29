@@ -20,3 +20,18 @@ export type Message =
     { kind: "input", image: String } |
     { kind: "output", predictions: Prediction[] } |
     { kind: "error", message: string };
+
+export function messageToString(message: Message): string {
+    switch (message.kind){
+        case "status":
+            return `Status("${message.message}")`
+
+        case "output":
+            return `Output(${message.predictions})`;
+        case "error":
+            return `Error("${message.message}")`
+
+        default:
+            return `Unexpected "${message.kind}"}`
+    }
+}
