@@ -18,5 +18,5 @@ export interface Prediction {
 export type Message =
     { kind: "status", message: string } |
     { kind: "input", image: String } |
-    { kind: "output", predictions: [Prediction] } |
+    { kind: "output", predictions: Prediction[] } |
     { kind: "error", message: string };
