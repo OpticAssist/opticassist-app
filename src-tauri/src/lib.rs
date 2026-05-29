@@ -2,10 +2,9 @@ mod predictions;
 mod message;
 use std::io::{BufRead, BufReader, Write};
 use std::sync::Mutex;
-use message::{Message, send_event};
+use message::Message;
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 use std::path::{ PathBuf };
-use tauri::AppHandle;
 use std::{thread, time};
 use tauri::ipc::Channel;
 use crate::predictions::Output;
@@ -17,7 +16,6 @@ struct ModelState {
 
 #[tauri::command]
 fn start_model(
-    app: AppHandle,
     channel: Channel<Message>,
     state: tauri::State<'_, ModelState>)
     -> Result<(), String>
@@ -51,12 +49,12 @@ fn start_model(
     let reader = BufReader::new(stdout);
 
     thread::spawn(move || {
-        listen_to_model(reader, channel, app);
+        listen_to_model(reader, channel);
     });
     Ok(())
 }
 
-fn listen_to_model(reader: BufReader<ChildStdout>, channel: Channel<Message>, app: AppHandle) {
+fn listen_to_model(reader: BufReader<ChildStdout>, channel: Channel<Message>) {
     for line_result in reader.lines() {
         match line_result {
             Ok(line) => {
@@ -64,19 +62,21 @@ fn listen_to_model(reader: BufReader<ChildStdout>, channel: Channel<Message>, ap
                     match message {
                         Message::RawOutput(raw) => {
                             let output: Output = raw.into();
-                            if channel.send(Message::Output(output)).is_err() {
-                                let err = Message::Error {message: "Failed to send model output through channel".to_string()};
-                                send_event(&app,err).unwrap();
+                            if let Err(e) = channel.send(Message::Output(output)) {
+                                eprintln!("Failed to send model output through channel: {e}")
                             }
                         },
                         _ => {
-                            send_event(&app, message).unwrap();
+                            if let Err(e) = channel.send(message) {
+                                eprintln!("Failed to send non-output message through channel: {e}")
+                            }
                         }
                     }
                 } else {
-                    // send error event
                     let err = Message::Error {message: format!("Serde failed to deserialize model output: {}", line)};
-                    send_event(&app, err).unwrap();
+                    if let Err(e) = channel.send(err.clone()) {
+                        eprintln!("Failed to send {err} through channel: {e}",);
+                    }
                 }
             }
             Err(e) => {
