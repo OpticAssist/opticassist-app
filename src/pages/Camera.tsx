@@ -7,8 +7,8 @@ import {Message, messageToString} from "../utils/types.ts";
 export default function Camera() {
     const webcamRef = useRef<Webcam>(null);
     const intervalRef = useRef<number>(null);
-
-    const [cameraReady, setCameraReady] = useState(false);
+    const [cameraReady, setCameraReady] = useState<boolean>(false);
+    const [modelReady, setModelReady] = useState<boolean>(false);
     const [message, setMessage] = useState<Message>();
 
     const capture = useCallback(() => {
@@ -25,14 +25,14 @@ export default function Camera() {
             }
 
             console.log("Captured image:", imageSrc);
-            let prediction;
-            processFrame(imageSrc)
-                .then((p) => {prediction = p})
-                .catch((e) => {console.error("Processing frame failed:", e)})
-            console.log("Prediction object:", prediction)
+            if (modelReady) {
+                sendFrame(imageSrc)
+                    .catch((e: string) => console.error(e));
+            } else {
+                console.log("Took screenshot, but model wasn't ready. Skipping frame.")
+            }
         }, []
     );
-
 
     const beginCapturing = () => {
         if (intervalRef.current) return;
@@ -43,19 +43,47 @@ export default function Camera() {
     };
 
     useEffect(() => {
-        if (cameraReady) {
-            // small delay so video frames exist
-            setTimeout(() => {
-                beginCapturing();
-            }, 1000);
-        }
+        if (!cameraReady) return;
+
+        const timeout = setTimeout(() => {
+            beginCapturing();
+        }, 1000);
 
         return () => {
+            clearTimeout(timeout);
+
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
+                intervalRef.current = null;
             }
         };
-    }, [cameraReady, capture]);
+    }, [cameraReady]);
+
+    // start the model
+    useEffect(() => {
+        startModel(
+            (m) => {
+                switch(m.kind) {
+                    case "status":
+                        if(m.message === "200 OK") {
+                            setModelReady(true)
+                        }
+                        break;
+                }
+                setMessage(m)
+            }
+        ).catch((e: string) => {
+            console.error(e)
+        })
+    }, [cameraReady])
+
+    // stop the model
+    useEffect(() => {
+        return () => {
+            stopModel().catch((e) => console.error(e))
+            setModelReady(false);
+        }
+    }, [])
 
     return (
         <div className="layout">
@@ -73,10 +101,6 @@ export default function Camera() {
                 }}
                 onUserMedia={() => {
                     console.log("Camera ready, starting model");
-                    startModel((m) => {
-                        setMessage(m);
-
-                    })
                     setCameraReady(true);
                 }}
                 onUserMediaError={(err) => {
@@ -84,7 +108,7 @@ export default function Camera() {
                 }}
             />
             <h1>Model Output: </h1>
-             {!message? <p> No Output </p>:<p>{messageToString(message)}</p>}
+            {!message? <p> No Output </p>:<p>{messageToString(message)}</p>}
         </div>
     );
 }

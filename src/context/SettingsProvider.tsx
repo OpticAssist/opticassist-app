@@ -31,7 +31,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
 
         }
 
-        loadSettings().then(() => console.log("Settings loaded"))
+        void loadSettings()
     }, [])
 
     const setTheme = async (theme: "light" | "dark") => {

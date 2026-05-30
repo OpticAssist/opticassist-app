@@ -25,12 +25,10 @@ export function messageToString(message: Message): string {
     switch (message.kind){
         case "status":
             return `Status("${message.message}")`
-
         case "output":
             return `Output(${message.predictions})`;
         case "error":
             return `Error("${message.message}")`
-
         default:
             return `Unexpected "${message.kind}"}`
     }

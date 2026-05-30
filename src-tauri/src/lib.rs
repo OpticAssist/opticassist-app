@@ -113,7 +113,8 @@ fn stop_model(state: tauri::State<'_, ModelState>) -> Result<(), String> {
     let stdin_opt = stdin_state.take();
     let child_opt = child_state.take();
 
-    let kill_timeout_ms = 100;
+    let kill_timeout_ms = 500;
+    let mut manual_kill = false;
 
     if let (Some(mut stdin), Some(mut child)) = (stdin_opt, child_opt) {
         let exit_message = Message::Status {message: "exit".to_string()};
@@ -121,16 +122,24 @@ fn stop_model(state: tauri::State<'_, ModelState>) -> Result<(), String> {
             Ok(exit_json) => {
                 if let Err(write_err) = writeln!(stdin, "{exit_json}") {
                     eprintln!("Failed to send exit signal to model, killing manually: {write_err}");
-                    child.kill().map_err(|e| {format!("Failed to kill the model process: {e}")})?;
-                } else {
-                    stdin.flush().map_err(|e| { format!("Flushing model stdin failed: {e}") })?;
+                    manual_kill = true;
+                } else if let Err(flush_err) = stdin.flush() {
+                        eprintln!("Flushing model stdin failed, killing manually: {flush_err}");
+                        manual_kill = true;
                 }
             }
             Err(serde_err) => {
                 eprintln!("Serde failed to serialize exit json, killing manually: {serde_err}");
-                child.kill().map_err(|e| {format!("Failed to kill the model process: {e}")})?;
+                manual_kill = true;
             }
         }
+
+        if manual_kill {
+            child.kill().map_err(|e| {format!("Failed to kill the model process: {e}")})?;
+            child.wait().map_err(|e| {format!("Error while waiting for the model to exit: {e}")})?;
+            return Ok(());
+        }
+
         thread::sleep(time::Duration::from_millis(kill_timeout_ms));
         match child.try_wait() {
             Ok(None) => {
@@ -153,8 +162,13 @@ fn model_path() -> PathBuf {
     let mut model_path = PathBuf::new();
     model_path.push("..");
     model_path.push("models");
+    // navigate to OS specific dist folder
+    #[cfg(target_os="macos")]
+    model_path.push("macos");
+    #[cfg(target_os="windows")]
+    model_path.push("windows");
+    model_path.push("dist");
     model_path.push("model");
-
     // add a .exe extension if on Windows
     #[cfg(target_os="windows")]
     model_path.set_extension("exe");
