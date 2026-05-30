@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
-import Sidebar from "../components/Sidebar.jsx";
-import {SettingsContext} from "../context/SettingsContext.js"
+import Sidebar from "../components/Sidebar.tsx";
+import {SettingsContext} from "../context/SettingsContext.ts"
 
 export default function Settings() {
 
@@ -10,7 +10,7 @@ export default function Settings() {
         return null;
     }
 
-    const getThemeButtonStyle = (themeName) => {
+    const getThemeButtonStyle = (themeName: "light" | "dark") => {
         return({
                 backgroundColor:
                     settings.theme === themeName ? "#26213f" : "white",

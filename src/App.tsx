@@ -1,9 +1,9 @@
 import React from "react";
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import "./App.css";
-import Home from "./pages/Home.jsx"
-import Settings from "./pages/Settings.jsx"
-import Camera from "./pages/Camera.jsx";
+import Home from "./pages/Home.tsx"
+import Settings from "./pages/Settings.tsx"
+import Camera from "./pages/Camera.tsx";
 function App() {
    return (
        <Router>
