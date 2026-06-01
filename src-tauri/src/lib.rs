@@ -8,6 +8,7 @@ use std::path::{ PathBuf };
 use std::{thread, time};
 use tauri::ipc::Channel;
 use crate::predictions::Output;
+use std::env;
 
 struct ModelState {
     stdin: Mutex<Option<ChildStdin>>,
@@ -23,8 +24,16 @@ fn start_model(
     let model_path = model_path();
 
     let mut model: Child;
+    let python_command;
 
-    match Command::new(model_path)
+    if env::consts::OS == "macos" {
+        python_command = "python3";
+    } else {
+        python_command = "python";
+    }
+
+    match Command::new(python_command)
+        .arg(model_path)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn() {
@@ -162,16 +171,23 @@ fn model_path() -> PathBuf {
     let mut model_path = PathBuf::new();
     model_path.push("..");
     model_path.push("models");
-    // navigate to OS specific dist folder
     #[cfg(target_os="macos")]
     model_path.push("macos");
     #[cfg(target_os="windows")]
     model_path.push("windows");
-    model_path.push("dist");
-    model_path.push("model");
-    // add a .exe extension if on Windows
-    #[cfg(target_os="windows")]
-    model_path.set_extension("exe");
+    model_path.push("model.py");
+    // model_path.push("..");
+    // model_path.push("models");
+    // // navigate to OS specific dist folder
+    // #[cfg(target_os="macos")]
+    // model_path.push("macos");
+    // #[cfg(target_os="windows")]
+    // model_path.push("windows");
+    // model_path.push("dist");
+    // model_path.push("model");
+    // // add a .exe extension if on Windows
+    // #[cfg(target_os="windows")]
+    // model_path.set_extension("exe");
 
     model_path
 }
