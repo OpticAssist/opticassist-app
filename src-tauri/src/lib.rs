@@ -171,10 +171,6 @@ fn model_path() -> PathBuf {
     let mut model_path = PathBuf::new();
     model_path.push("..");
     model_path.push("models");
-    #[cfg(target_os="macos")]
-    model_path.push("macos");
-    #[cfg(target_os="windows")]
-    model_path.push("windows");
     model_path.push("model.py");
     // model_path.push("..");
     // model_path.push("models");
