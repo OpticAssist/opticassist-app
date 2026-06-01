@@ -23,6 +23,3 @@ dist-ssr
 *.sln
 *.sw?
 
-# Model binaries for now
-/src-tauri/models/macos/dist/
-/src-tauri/models/windows/dist/
