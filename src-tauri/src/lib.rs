@@ -172,19 +172,6 @@ fn model_path() -> PathBuf {
     model_path.push("..");
     model_path.push("models");
     model_path.push("model.py");
-    // model_path.push("..");
-    // model_path.push("models");
-    // // navigate to OS specific dist folder
-    // #[cfg(target_os="macos")]
-    // model_path.push("macos");
-    // #[cfg(target_os="windows")]
-    // model_path.push("windows");
-    // model_path.push("dist");
-    // model_path.push("model");
-    // // add a .exe extension if on Windows
-    // #[cfg(target_os="windows")]
-    // model_path.set_extension("exe");
-
     model_path
 }
 
