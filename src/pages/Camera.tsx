@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Webcam from "react-webcam";
-import Sidebar from "../components/Sidebar.jsx";
+import Sidebar from "../components/Sidebar.tsx";
 import {startModel, sendFrame, stopModel} from "../utils/commands.ts"
 import {Message, messageToString} from "../utils/types.ts";
 
