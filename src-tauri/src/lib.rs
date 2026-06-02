@@ -122,7 +122,7 @@ fn stop_model(state: tauri::State<'_, ModelState>) -> Result<(), String> {
     let stdin_opt = stdin_state.take();
     let child_opt = child_state.take();
 
-    let kill_timeout_ms = 500;
+    let kill_timeout_ms = 2000;
     let mut manual_kill = false;
 
     if let (Some(mut stdin), Some(mut child)) = (stdin_opt, child_opt) {
