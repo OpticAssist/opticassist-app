@@ -5,9 +5,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { SettingsProvider } from "./context/SettingsProvider.tsx"
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
       <SettingsProvider>
           <App />
       </SettingsProvider>
-  </React.StrictMode>,
 );
