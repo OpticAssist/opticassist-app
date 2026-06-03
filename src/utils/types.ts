@@ -26,7 +26,7 @@ export function messageToString(message: Message): string {
         case "status":
             return `Status("${message.message}")`
         case "output":
-            return `Output(${message.predictions})`;
+            return `Output(${JSON.stringify(message.predictions)})`;
         case "error":
             return `Error("${message.message}")`
         default:

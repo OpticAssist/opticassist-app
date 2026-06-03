@@ -4,12 +4,15 @@ import Sidebar from "../components/Sidebar.tsx";
 import {startModel, sendFrame, stopModel} from "../utils/commands.ts"
 import {Message, messageToString} from "../utils/types.ts";
 
+
+
 export default function Camera() {
     const webcamRef = useRef<Webcam>(null);
     const intervalRef = useRef<number>(null);
     const [cameraReady, setCameraReady] = useState<boolean>(false);
-    const [modelReady, setModelReady] = useState<boolean>(false);
     const [message, setMessage] = useState<Message>();
+    const [modelReady, setModelReady] = useState<boolean>(false);
+
 
     const capture = useCallback(() => {
             if (!webcamRef.current) {
@@ -24,19 +27,25 @@ export default function Camera() {
                 return;
             }
 
-            console.log("Captured image:", imageSrc);
+            console.log("Captured image");
+            let jpeg_prefix = "data:image/jpeg;base64,"
+        let modelInput = imageSrc;
+            if(imageSrc.startsWith(jpeg_prefix)){
+                modelInput = imageSrc.substring(jpeg_prefix.length);
+            }
             if (modelReady) {
-                sendFrame(imageSrc)
+                sendFrame(modelInput)
                     .catch((e: string) => console.error(e));
             } else {
                 console.log("Took screenshot, but model wasn't ready. Skipping frame.")
             }
-        }, []
+        }, [modelReady]
     );
 
     const beginCapturing = () => {
         if (intervalRef.current) return;
 
+        // @ts-ignore
         intervalRef.current = setInterval(() => {
             capture();
         }, 2000);
@@ -57,7 +66,7 @@ export default function Camera() {
                 intervalRef.current = null;
             }
         };
-    }, [cameraReady]);
+    }, [cameraReady, capture]);
 
     // start the model
     useEffect(() => {

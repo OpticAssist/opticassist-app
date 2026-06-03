@@ -10,6 +10,9 @@ from sklearn.cluster import KMeans
 from abc import ABC
 from dataclasses import dataclass, asdict
 import logging
+import os
+from pathlib import Path
+import traceback
 
 logging.disable(logging.CRITICAL)
 sys.stdout.reconfigure(line_buffering=True) # Removes the need for `flush = True` with every print
@@ -58,25 +61,28 @@ class RawOutput(Message):
 
 def hsv_to_color_name(hsv_pixel):
     h, s, v = hsv_pixel
+
     if v < 40:
         return "black"
-    if s < 40:
-        return "white" if v > 180 else "gray"
-    if h < 15 or h >= 165:
+    if s < 30:
+        return "white" if v > 200 else "gray"
+
+    if h < 8 or h >= 165:
         return "red"
-    if h < 25:
+    if h < 22:
         return "orange"
-    if h < 45:
+    if h < 38:
         return "yellow"
-    if h < 90:
+    if h < 75:
         return "green"
-    if h < 120:
+    if h < 95:
         return "cyan"
-    if h < 135:
+    if h < 130:
         return "blue"
     if h < 150:
         return "purple"
     return "pink"
+
 
 # Uses KMeans cluster. Basically, the image is cropped to 1/4 -- 3/4 to center it.
 # Then, km basically looks at all the pixels and sorts them to a color group that it fits.
@@ -117,7 +123,7 @@ def prediction_json(model_output: list[Results], np_img) -> str:
         bounding_box = [ix1, iy1, ix2, iy2]
         cropped_object = np_img[iy1:iy2, ix1:ix2]
 
-        if cropped_object.size > 0:
+        if cropped_object.size > 0 and label != "person":
             # bgr_avg = cv2.mean(cropped_object)[:3]
             color=  dominant_color(cropped_object)
         else:
@@ -130,7 +136,11 @@ def prediction_json(model_output: list[Results], np_img) -> str:
 
     return str(output)
 
-model = YOLO("yolo26n.onnx", task="detect", verbose=False)
+current_dir = Path(__file__).resolve().parent
+
+model_path = current_dir / "yolo26n.onnx"
+
+model = YOLO(str(model_path), task="detect", verbose=False)
 print(Status(message="200 OK"))
 
 def main(img: str):
@@ -153,7 +163,8 @@ if __name__ == '__main__':
         try:
             main(arg)
         except Exception as e:
-            print(Error(message=f"Model crashed while running, skipping the frame: {e}"))
+            trace_string = traceback.fromat_exc()
+            print(Error(message=f"Model crashed while running, skipping the frame: {e}\n {trace_string}"))
         sys.exit(0)
     while True:
         arg = sys.stdin.readline()
