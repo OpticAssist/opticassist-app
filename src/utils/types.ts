@@ -1,3 +1,17 @@
+let filteredLabel:string[] = [];
+let labelColors:string[] = [];
+
+    function displayFilter(): string{
+    let result:string[] = [];
+        for (const label of filteredLabel) {
+            if(!result.includes(label)){
+                result.push(labelColors[filteredLabel.indexOf(label)] +" "+ label);
+            }else{
+                result[result.indexOf(label)] = label.concat(" (multiple)")
+            }
+        }
+        return result.join(", ");
+};
 export interface SettingsContextType {
     settings: Settings;
     setTheme: (theme: "light" | "dark") => Promise<void>;
@@ -26,7 +40,16 @@ export function messageToString(message: Message): string {
         case "status":
             return `Status("${message.message}")`
         case "output":
-            return `Output(${JSON.stringify(message.predictions)})`;
+            filteredLabel = message.predictions.map((p)=>{
+                return p.label;
+            });
+            labelColors = message.predictions.map((p)=>{
+                return p.color;
+            });
+             return `Output[${displayFilter()}]`;
+
+
+
         case "error":
             return `Error("${message.message}")`
         default:
