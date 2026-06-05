@@ -6,6 +6,5 @@
     "moduleResolution": "bundler",
     "strict": true,
     "jsx": "react",
-    "allowImportingTsExtensions": true,
   }
 }

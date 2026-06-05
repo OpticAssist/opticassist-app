@@ -27,12 +27,13 @@ fn start_model(
     let python_command;
 
     if env::consts::OS == "macos" {
-        python_command = "python3";
+        python_command = "../.venv/bin/python3";
     } else {
         python_command = "python";
     }
 
     match Command::new(python_command)
+        // prevent macos crash
         .arg(model_path)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())

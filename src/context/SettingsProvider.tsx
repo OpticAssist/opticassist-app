@@ -2,8 +2,8 @@ import React from 'react'
 import {LazyStore} from "@tauri-apps/plugin-store";
 import {ReactNode, useEffect} from 'react';
 import { useState } from 'react';
-import { SettingsContext } from "./SettingsContext.ts"
-import {Settings} from "../utils/types.ts";
+import { SettingsContext } from "./SettingsContext"
+import {Settings} from "../utils/types";
 
 const store = new LazyStore("settings.json");
 

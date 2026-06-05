@@ -1,7 +1,7 @@
 let filteredLabel:string[] = [];
 let labelColors:string[] = [];
 
-    function displayFilter(): string{
+    function displayFilter(): string {
     let result:string[] = [];
         for (const label of filteredLabel) {
             if(!result.includes(label)){
@@ -11,7 +11,7 @@ let labelColors:string[] = [];
             }
         }
         return result.join(", ");
-};
+}
 export interface SettingsContextType {
     settings: Settings;
     setTheme: (theme: "light" | "dark") => Promise<void>;

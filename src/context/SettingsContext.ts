@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import {SettingsContextType} from "../utils/types.ts";
+import {SettingsContextType} from "../utils/types";
 
 
 // this default has to be updated whenever new settings are added.

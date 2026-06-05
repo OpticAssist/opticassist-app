@@ -4,8 +4,8 @@ import "../App.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faCamera, faGear} from "@fortawesome/free-solid-svg-icons"
 
-import { SettingsContext } from "../context/SettingsContext.ts";
-import ThemeIcon from "../components/ThemeIcon.jsx";
+import { SettingsContext } from "../context/SettingsContext";
+import ThemeIcon from "../components/ThemeIcon";
 export default function Home() {
     const navigate = useNavigate();
     const {settings, toggleTheme} = useContext(SettingsContext);

@@ -3,9 +3,9 @@ import {faCamera, faGear} from "@fortawesome/free-solid-svg-icons"
 import React from "react";
 import { useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
-import ThemeIcon from "./ThemeIcon.tsx"
+import ThemeIcon from "./ThemeIcon"
 
-import { SettingsContext } from "../context/SettingsContext.ts";
+import { SettingsContext } from "../context/SettingsContext";
 
 const Sidebar = () => {
     const {toggleTheme} = useContext(SettingsContext);

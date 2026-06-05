@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
-import Sidebar from "../components/Sidebar.tsx";
-import {SettingsContext} from "../context/SettingsContext.ts"
+import Sidebar from "../components/Sidebar";
+import {SettingsContext} from "../context/SettingsContext"
 
 export default function Settings() {
 

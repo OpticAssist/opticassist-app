@@ -1,10 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Webcam from "react-webcam";
-import Sidebar from "../components/Sidebar.tsx";
-import {startModel, sendFrame, stopModel} from "../utils/commands.ts"
-import {Message, messageToString} from "../utils/types.ts";
-
-
+import Sidebar from "../components/Sidebar";
+import {startModel, sendFrame, stopModel} from "../utils/commands"
+import {Message, messageToString} from "../utils/types";
 
 export default function Camera() {
     const webcamRef = useRef<Webcam>(null);
@@ -13,7 +11,6 @@ export default function Camera() {
     const [message, setMessage] = useState<Message>();
     const [modelReady, setModelReady] = useState<boolean>(false);
     const [outputReady, setOutputReady] = useState<boolean>(false);
-
 
     const capture = useCallback(() => {
             if (!webcamRef.current) {
@@ -42,6 +39,24 @@ export default function Camera() {
             }
         }, [modelReady]
     );
+
+    const speak = (text: string) => {
+        return new Promise<void>((resolve, reject) => {
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            utterance.onend = () => {
+                resolve();
+            };
+
+            utterance.onerror = (err_event) => {
+                reject(err_event.error)
+            }
+
+                window.speechSynthesis.speak(utterance);
+        });
+    }
 
     const beginCapturing = () => {
         if (intervalRef.current) return;
@@ -81,6 +96,15 @@ export default function Camera() {
                         break;
                     case "output":
                         setOutputReady(true);
+                        let predIndex = 0
+                        while(predIndex < m.predictions.length) {
+                            let p = m.predictions[predIndex]
+                            const text = `There is a ${p.color} ${p.label} at the ${p.location}, ${(p.confidence * 100).toFixed(2)}% confidence.`;
+                            speak(text).catch((e) => {
+                                console.error(`Speaking failed: ${e}`)
+                            })
+                            predIndex++;
+                        }
                 }
                 setMessage(m)
             }

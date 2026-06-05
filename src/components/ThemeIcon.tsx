@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { SettingsContext } from "../context/SettingsContext.ts";
+import { SettingsContext } from "../context/SettingsContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSun, faMoon } from "@fortawesome/free-solid-svg-icons"
 
