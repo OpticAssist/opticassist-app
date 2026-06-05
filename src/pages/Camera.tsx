@@ -12,6 +12,7 @@ export default function Camera() {
     const [cameraReady, setCameraReady] = useState<boolean>(false);
     const [message, setMessage] = useState<Message>();
     const [modelReady, setModelReady] = useState<boolean>(false);
+    const [outputReady, setOutputReady] = useState<boolean>(false);
 
 
     const capture = useCallback(() => {
@@ -78,6 +79,8 @@ export default function Camera() {
                             setModelReady(true)
                         }
                         break;
+                    case "output":
+                        setOutputReady(true);
                 }
                 setMessage(m)
             }
@@ -97,7 +100,7 @@ export default function Camera() {
     return (
         <div className="layout">
             <Sidebar />
-
+        <div className = {outputReady?"cam":"nocam"}>
             <Webcam
                 ref={webcamRef}
                 mirrored={true}
@@ -116,6 +119,7 @@ export default function Camera() {
                     console.error("Camera error:", err);
                 }}
             />
+        </div>
             <h1>Model Output: </h1>
             {!message? <p> No Output </p>:<p>{messageToString(message)}</p>}
         </div>

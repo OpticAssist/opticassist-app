@@ -109,4 +109,11 @@ li {
   list-style-type: none;
 }
 
+.cam{
+  opacity: 100%;
+}
+.nocam{
+  opacity:10%
+}
+
 
