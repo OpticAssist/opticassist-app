@@ -96,24 +96,27 @@ export default function Camera() {
                         break;
                     case "output":
                         setOutputReady(true);
-                        let predIndex = 0
-                        while(predIndex < m.predictions.length) {
-                            let p = m.predictions[predIndex]
-                            let text: string;
+                        const processPredictions = async () => {
+                            for(const p of m.predictions) {
+                                let text: string;
 
-                            if (p.label === "person") {
-                                text = `There is a person at the ${p.location}`
-                            } else if(["a", "e", "i", "o", "u"].includes(p.color.charAt(0))) {
-                                text = `There is an ${p.color} ${p.label} at the ${p.location}, ${(p.confidence * 100).toFixed(2)}% confidence.`;
-                            } else {
-                                text = `There is a ${p.color} ${p.label} at the ${p.location}, ${(p.confidence * 100).toFixed(2)}% confidence.`;
+                                if (p.label === "person") {
+                                    text = `There is a person at the ${p.location}`
+                                } else if(["a", "e", "i", "o", "u"].includes(p.color.charAt(0))) {
+                                    text = `There is an ${p.color} ${p.label} at the ${p.location}, ${(p.confidence * 100).toFixed(2)}% confidence.`;
+                                } else {
+                                    text = `There is a ${p.color} ${p.label} at the ${p.location}, ${(p.confidence * 100).toFixed(2)}% confidence.`;
+                                }
+
+                                try {
+                                    await speak(text);
+                                } catch (e) {
+                                    console.error("Speaking failed:", e);
+                                }
                             }
-
-                            speak(text).catch((e) => {
-                                console.error(`Speaking failed: ${e}`)
-                            })
-                            predIndex++;
-                        }
+                        };
+                        let _ = processPredictions();
+                        break;
                 }
                 setMessage(m)
             }
