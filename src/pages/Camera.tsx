@@ -65,6 +65,8 @@ export default function Camera() {
         intervalRef.current = setInterval(() => {
             capture();
         }, 2000);
+        speak("Welcome to optic assist. Please wait momentarily as the model loads.").catch((e)=>(console.error("Intro failed: "+e)));
+
     };
 
     useEffect(() => {
@@ -72,7 +74,7 @@ export default function Camera() {
 
         const timeout = setTimeout(() => {
             beginCapturing();
-        }, 1000);
+        }, 5000);
 
         return () => {
             clearTimeout(timeout);
@@ -96,11 +98,13 @@ export default function Camera() {
                         break;
                     case "output":
                         setOutputReady(true);
+
                         const processPredictions = async () => {
                             for(const p of m.predictions) {
                                 let text: string;
 
                                 if (p.label === "person") {
+
                                     text = `There is a person at the ${p.location}`
                                 } else if(["a", "e", "i", "o", "u"].includes(p.color.charAt(0))) {
                                     text = `There is an ${p.color} ${p.label} at the ${p.location}, ${(p.confidence * 100).toFixed(2)}% confidence.`;
@@ -109,6 +113,12 @@ export default function Camera() {
                                 }
 
                                 try {
+                                    if(p.label === "person"){
+                                        setTimeout(() => {
+                                            speak(text).catch(e => console.error("Speaking failed:", e));
+                                            }, 5000);
+                                        continue;
+                                    }
                                     await speak(text);
                                 } catch (e) {
                                     console.error("Speaking failed:", e);
