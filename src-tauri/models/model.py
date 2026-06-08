@@ -10,7 +10,6 @@ from sklearn.cluster import KMeans
 from abc import ABC
 from dataclasses import dataclass, asdict
 import logging
-import os
 from pathlib import Path
 import traceback
 
@@ -163,7 +162,7 @@ if __name__ == '__main__':
         try:
             main(arg)
         except Exception as e:
-            trace_string = traceback.fromat_exc()
+            trace_string = traceback.format_exc()
             print(Error(message=f"Model crashed while running, skipping the frame: {e}\n {trace_string}"))
         sys.exit(0)
     while True:
