@@ -113,12 +113,7 @@ export default function Camera() {
                                 }
 
                                 try {
-                                    if(p.label === "person"){
-                                        setTimeout(() => {
-                                            speak(text).catch(e => console.error("Speaking failed:", e));
-                                            }, 5000);
-                                        continue;
-                                    }
+                                    
                                     await speak(text);
                                 } catch (e) {
                                     console.error("Speaking failed:", e);
