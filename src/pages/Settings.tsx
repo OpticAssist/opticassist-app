@@ -40,6 +40,13 @@ export default function Settings() {
                         >Dark
                         </button>
                     </li>
+                    <li>
+                        <h2>Capture Rate</h2>
+                        <form action="">
+                            <input type="text"/>
+
+                        </form>
+                    </li>
                 </ul>
             </main>
         </div>
