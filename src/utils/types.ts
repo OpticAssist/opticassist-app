@@ -16,10 +16,12 @@ export interface SettingsContextType {
     settings: Settings;
     setTheme: (theme: "light" | "dark") => Promise<void>;
     toggleTheme: () => Promise<void>;
+    setCaptureRate: (rate: number) => Promise<void>;
 }
 
 export interface Settings {
     theme: "light" | "dark";
+    captureRate: number;
 }
 
 export interface Prediction {

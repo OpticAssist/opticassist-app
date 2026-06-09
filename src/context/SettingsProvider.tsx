@@ -9,7 +9,8 @@ const store = new LazyStore("settings.json");
 
 // if you are changing this, also change the one in SettingsContext.ts
 const DEFAULT_SETTINGS: Settings = {
-    theme: "light"
+    theme: "light",
+    captureRate: 2000
 }
 
 async function getSettings(): Promise<Settings> {
@@ -53,9 +54,15 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
         await store.set("settings", updatedSettings);
     }
 
+    const setCaptureRate = async (rate: number) => {
+        const updated = {...settings, captureRate: rate};
+        setSettings(updated);
+        await store.set("settings", updated);
+    }
+
 
     return(
-        <SettingsContext.Provider value={{settings, setTheme, toggleTheme}}>
+        <SettingsContext.Provider value={{settings, setTheme, toggleTheme, setCaptureRate}}>
         {children}
         </SettingsContext.Provider>);
 }

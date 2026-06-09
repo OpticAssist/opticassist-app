@@ -1,10 +1,12 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, {useState, useRef, useEffect, useCallback, useContext} from "react";
 import Webcam from "react-webcam";
 import Sidebar from "../components/Sidebar";
 import {startModel, sendFrame, stopModel} from "../utils/commands"
 import {Message, messageToString} from "../utils/types";
+import {SettingsContext} from "../context/SettingsContext";
 
 export default function Camera() {
+    const {settings} = useContext(SettingsContext);
     const webcamRef = useRef<Webcam>(null);
     const intervalRef = useRef<number>(null);
     const [cameraReady, setCameraReady] = useState<boolean>(false);
@@ -64,7 +66,7 @@ export default function Camera() {
         // @ts-ignore
         intervalRef.current = setInterval(() => {
             capture();
-        }, 2000);
+        }, settings.captureRate);
         speak("Welcome to optic assist. Please wait momentarily as the model loads.").catch((e)=>(console.error("Intro failed: "+e)));
 
     };

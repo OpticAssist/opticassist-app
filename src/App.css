@@ -116,4 +116,7 @@ li {
   opacity:10%
 }
 
+label {
+  color: var(--text)
+}
 

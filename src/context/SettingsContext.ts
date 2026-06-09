@@ -8,9 +8,11 @@ export const SettingsContext =
         {
             settings:
                 {
-                    theme: "light"
+                    theme: "light",
+                    captureRate: 2000
                 },
             setTheme: async () => {},
             toggleTheme: async () => {},
+            setCaptureRate: async (rate: number) => {},
         }
     );
