@@ -53,7 +53,7 @@ export default function Settings() {
                             step="500"
                             onChange={(e) => setCaptureRate(Number(e.target.value))}
                         />
-                        <label htmlFor="capture-rate">{settings.captureRate}</label>
+                        <label htmlFor="capture-rate">{settings.captureRate}ms</label>
                     </li>
                 </ul>
             </main>
