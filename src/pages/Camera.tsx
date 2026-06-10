@@ -7,6 +7,7 @@ import {SettingsContext} from "../context/SettingsContext";
 
 export default function Camera() {
     const {settings} = useContext(SettingsContext);
+    const previousPredictionsRef = useRef<Set<string>>(new Set());
     const webcamRef = useRef<Webcam>(null);
     const intervalRef = useRef<number>(null);
     const [cameraReady, setCameraReady] = useState<boolean>(false);
@@ -61,9 +62,8 @@ export default function Camera() {
     }
 
     const beginCapturing = () => {
+        console.log("Starting capture interval")
         if (intervalRef.current) return;
-
-        // @ts-ignore
         intervalRef.current = setInterval(() => {
             capture();
         }, settings.captureRate);
@@ -72,7 +72,7 @@ export default function Camera() {
     };
 
     useEffect(() => {
-        if (!cameraReady) return;
+        if (!cameraReady || !modelReady) return;
 
         const timeout = setTimeout(() => {
             beginCapturing();
@@ -86,7 +86,7 @@ export default function Camera() {
                 intervalRef.current = null;
             }
         };
-    }, [cameraReady, capture]);
+    }, [cameraReady, modelReady, capture]);
 
     // start the model
     useEffect(() => {
@@ -95,32 +95,49 @@ export default function Camera() {
                 switch(m.kind) {
                     case "status":
                         if(m.message === "200 OK") {
-                            setModelReady(true)
+                            console.log("Got 200 OK");
+                            setModelReady(true);
                         }
                         break;
                     case "output":
                         setOutputReady(true);
-
-                        const processPredictions = async () => {
-                            for(const p of m.predictions) {
-                                let text: string;
-
+                        const currentPredictions = new Map(
+                            m.predictions.map((p) => {
                                 if (p.label === "person") {
-
-                                    text = `There is a person at the ${p.location}`
+                                    return [`person:${p.location}`,`There is a person at the ${p.location}`]
                                 } else if(["a", "e", "i", "o", "u"].includes(p.color.charAt(0))) {
-                                    text = `There is an ${p.color} ${p.label} at the ${p.location}, ${(p.confidence * 100).toFixed(2)}% confidence.`;
+                                    return [`${p.label}:${p.location}`, `There is an ${p.color} ${p.label} at the ${p.location}, ${(p.confidence * 100).toFixed(2)}% confidence.`]
                                 } else {
-                                    text = `There is a ${p.color} ${p.label} at the ${p.location}, ${(p.confidence * 100).toFixed(2)}% confidence.`;
-                                }
-
-                                try {
-                                    
-                                    await speak(text);
-                                } catch (e) {
-                                    console.error("Speaking failed:", e);
+                                    return [`${p.label}:${p.location}`, `There is a ${p.color} ${p.label} at the ${p.location}, ${(p.confidence * 100).toFixed(2)}% confidence.`]
                                 }
                             }
+                        ));
+
+                        console.log(`Current predictions: ${currentPredictions}`);
+
+                        const processPredictions = async () => {
+
+                            try {
+                                for (const key of [...previousPredictionsRef.current]) {
+                                    if (!currentPredictions.has(key)) {
+                                        const [label, location] = key.split(":");
+                                        await speak(`${label} at the ${location} has left field of view.`)
+                                    }
+
+                                    previousPredictionsRef.current.delete(key);
+                                }
+
+                                for (const [key, text] of currentPredictions.entries()) {
+
+                                    if (!previousPredictionsRef.current.has(key)) {
+                                        previousPredictionsRef.current.add(key);
+                                        await speak(text);
+                                    }
+                                }
+                            } catch (e) {
+                               console.error("Speaking failed:", e)
+                            }
+
                         };
                         let _ = processPredictions();
                         break;
@@ -130,11 +147,12 @@ export default function Camera() {
         ).catch((e: string) => {
             console.error(e)
         })
-    }, [cameraReady])
+    }, [/*cameraReady, modelReady*/])
 
     // stop the model
     useEffect(() => {
         return () => {
+            speak("Thank you for using Optic Assist.").catch((e) => console.error(e))
             stopModel().catch((e) => console.error(e))
             setModelReady(false);
         }

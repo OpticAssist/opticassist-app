@@ -2,16 +2,32 @@ import sys
 import json
 import base64
 from json import JSONDecodeError
+
+# eprint here to know how long imports take
+def eprint(*values: object) -> None:
+    print(*values, file=sys.stderr, flush=True)
+
+eprint("python: importing numpy")
 import numpy as np
+eprint("python: numpy successfully imported.")
+eprint("python: importing cv2")
 import cv2
+eprint("python: cv2 successfully imported.")
+eprint("python: importing YOLO")
 from ultralytics import YOLO
+eprint("python: YOLO successfully imported")
+eprint("python: importing Results")
 from ultralytics.engine.results import Results
+eprint("python: Results successfully imported")
+eprint("python: importing KMeans")
 from sklearn.cluster import KMeans
+eprint("python: KMeans imported")
 from abc import ABC
 from dataclasses import dataclass, asdict
 import logging
 from pathlib import Path
 import traceback
+eprint("python: imports complete.")
 
 logging.disable(logging.CRITICAL)
 sys.stdout.reconfigure(line_buffering=True) # Removes the need for `flush = True` with every print
@@ -166,7 +182,9 @@ if __name__ == '__main__':
             print(Error(message=f"Model crashed while running, skipping the frame: {e}\n {trace_string}"))
         sys.exit(0)
     while True:
+        eprint("Reading line...")
         arg = sys.stdin.readline()
+        eprint("Successfully read rust's input")
         if arg.strip() != "":
             try:
                 data = json.loads(arg)
@@ -178,6 +196,7 @@ if __name__ == '__main__':
                 case "status":
                     status = Status(message=data.get("message"))
                     if status.message == "exit":
+                        eprint("python: received exit signal")
                         sys.exit(0)
                     else:
                         print(Error(message=f"Unrecognized status message: {status.message}"))

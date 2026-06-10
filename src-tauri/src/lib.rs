@@ -33,13 +33,14 @@ fn start_model(
     }
 
     match Command::new(python_command)
-        // prevent macos crash
         .arg(model_path)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
         .spawn() {
         Ok(m) => {
             model = m;
+            println!("rust: model child process successfully started")
         }
         Err(model_err) => {
             return Err(format!("Model failed to start: {model_err}"))
@@ -48,6 +49,7 @@ fn start_model(
 
     let stdin = model.stdin.take().unwrap(); // real model stdin
     let stdout = model.stdout.take().unwrap();
+    let stderr = model.stderr.take().unwrap();
 
     { // create a scope to remove the lock automatically after state is updated
         let mut stdin_state = state.stdin.lock().unwrap(); // prev stdin
@@ -56,10 +58,20 @@ fn start_model(
         *child_state = Some(model);
     }
 
-    let reader = BufReader::new(stdout);
+    thread::spawn(move || {
+        println!("rust: entered stdout reader thread");
+        let reader = BufReader::new(stdout);
+        listen_to_model(reader, channel);
+    });
 
     thread::spawn(move || {
-        listen_to_model(reader, channel);
+        println!("rust: entered stderr reader thread");
+        let reader = BufReader::new(stderr);
+        for line_result in reader.lines() {
+            if let Ok(line) = line_result {
+                println!("model stderr: {line}")
+            }
+        }
     });
     Ok(())
 }
@@ -71,6 +83,7 @@ fn listen_to_model(reader: BufReader<ChildStdout>, channel: Channel<Message>) {
                 if let Ok(message) = serde_json::from_str::<Message>(line.as_str()) {
                     match message {
                         Message::RawOutput(raw) => {
+                            println!("rust: Received raw output from model");
                             let output: Output = raw.into();
                             if let Err(e) = channel.send(Message::Output(output)) {
                                 eprintln!("Failed to send model output through channel: {e}")
@@ -99,12 +112,14 @@ fn listen_to_model(reader: BufReader<ChildStdout>, channel: Channel<Message>) {
 
 #[tauri::command]
 fn send_frame(frame: String, state: tauri::State<'_, ModelState>) -> Result<(), String> {
+    println!("rust: Entered send_frame");
     let mut stdin_state = state.stdin.lock().unwrap();
     if let Some(stdin) = stdin_state.as_mut() {
         let frame_obj = Message::Input {image: frame};
         let frame_json = serde_json::to_string(&frame_obj).map_err(|e| {
             format!("Serde failed to serialize frame json: {e}")
         })?;
+        println!("rust: serde converted image to json - writing to model stdin");
         writeln!(stdin, "{frame_json}")
             .map_err(|e| {
                 format!("Failed to write to model's stdin: {e}")
@@ -123,7 +138,7 @@ fn stop_model(state: tauri::State<'_, ModelState>) -> Result<(), String> {
     let stdin_opt = stdin_state.take();
     let child_opt = child_state.take();
 
-    let kill_timeout_ms = 2000;
+    let kill_timeout_ms = 1000;
     let mut manual_kill = false;
 
     if let (Some(mut stdin), Some(mut child)) = (stdin_opt, child_opt) {
@@ -146,21 +161,27 @@ fn stop_model(state: tauri::State<'_, ModelState>) -> Result<(), String> {
 
         if manual_kill {
             child.kill().map_err(|e| {format!("Failed to kill the model process: {e}")})?;
+            println!("rust: Marked as manual kill: waiting for model process to be killed...");
             child.wait().map_err(|e| {format!("Error while waiting for the model to exit: {e}")})?;
+            println!("rust: Returning Ok after model killed");
             return Ok(());
         }
 
         thread::sleep(time::Duration::from_millis(kill_timeout_ms));
         match child.try_wait() {
+            Ok(Some(exit_status)) => {
+                println!("rust: Model exited with code {exit_status}")
+            }
             Ok(None) => {
-                eprintln!("Model did not exit after {kill_timeout_ms} ms, killing manually.");
+                eprintln!("rust: Model did not exit after {kill_timeout_ms} ms, killing manually.");
                 child.kill().map_err(|e| {format!("Failed to kill the model process: {e}")})?;
+                println!("rust: Waiting for the model to be killed.");
                 child.wait().map_err(|e| {format!("Error while waiting for the model to exit: {e}")})?;
+                println!("rust: Model killed.")
             }
             Err(e) => {
                 return Err(format!("Error while waiting for the model to exit: {e}"));
             }
-            _ => {}
         }
         Ok(())
     } else {
