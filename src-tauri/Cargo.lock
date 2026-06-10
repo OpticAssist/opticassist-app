@@ -2306,7 +2306,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "opticassist-app"
+name = "opticassist"
 version = "0.1.0"
 dependencies = [
  "color-name",
