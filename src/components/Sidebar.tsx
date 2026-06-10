@@ -13,7 +13,7 @@ const Sidebar = () => {
     return(
         <div className="sidebar">
             <div className="sidebar-item">
-                <button onClick={() => navigate("/")}>[logo]</button>
+                <button onClick={() => navigate("/")}><i src="../../public/sidebar-logo-oa.png"></i></button>
                 <span className="tooltip">Back to Home</span>
             </div>
             <div className="sidebar-item">

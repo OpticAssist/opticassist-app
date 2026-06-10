@@ -45,7 +45,7 @@ export default function Camera() {
 
     const speak = (text: string) => {
         return new Promise<void>((resolve, reject) => {
-            window.speechSynthesis.cancel();
+            // window.speechSynthesis.cancel();
 
             const utterance = new SpeechSynthesisUtterance(text);
 
