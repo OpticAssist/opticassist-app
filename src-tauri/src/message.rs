@@ -12,7 +12,7 @@ pub enum Message {
     },
     #[serde(rename="input")]
     Input {
-        image: String
+        image: Vec<u8>
     },
     #[serde(rename="raw_output")]
     #[serde(skip_serializing)]
@@ -30,13 +30,7 @@ impl fmt::Display for Message {
         match self {
             Message::Status {message} => {write!(f, "Status(\"{message}\")")},
             Message::Input { image } => {
-                let max_chars = 20;
-                let truncated = if image.chars().count() > max_chars {
-                    &image[..max_chars]
-                } else {
-                    image.as_str()
-                };
-                write!(f, "Input({truncated}...)")
+                write!(f, "{:?}", {image})
             },
             Message::RawOutput(raw) => {write!(f, "RawOutput(image_shape: {:?}, raw_predictions: {:?})", raw.image_shape, raw.raw_predictions)},
             Message::Output(out) => {write!(f, "Output({:?})", out.predictions)}

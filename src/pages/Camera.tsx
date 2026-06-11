@@ -30,11 +30,13 @@ export default function Camera() {
 
             console.log("Captured image");
             let jpeg_prefix = "data:image/jpeg;base64,"
-        let modelInput = imageSrc;
-            if(imageSrc.startsWith(jpeg_prefix)){
-                modelInput = imageSrc.substring(jpeg_prefix.length);
+        let base64Input = imageSrc;
+            if(imageSrc.startsWith(jpeg_prefix)) {
+                base64Input = imageSrc.substring(jpeg_prefix.length);
             }
             if (modelReady) {
+                const binary = atob(base64Input)
+                const modelInput = Uint8Array.from(binary, (c) => c.charCodeAt(0))
                 sendFrame(modelInput)
                     .catch((e: string) => console.error(e));
             } else {
@@ -45,8 +47,8 @@ export default function Camera() {
 
     const speak = (text: string) => {
         return new Promise<void>((resolve, reject) => {
-            console.log("Available voices:", window.speechSynthesis.getVoices())
-            // window.speechSynthesis.cancel();
+            // console.log("Available voices:", window.speechSynthesis.getVoices())
+            window.speechSynthesis.cancel();
 
             const utterance = new SpeechSynthesisUtterance(text);
 
@@ -120,12 +122,13 @@ export default function Camera() {
 
                             try {
                                 for (const key of [...previousPredictionsRef.current]) {
+                                    console.log("Previous:", [...previousPredictionsRef.current]);
+                                    console.log("Current:", [...currentPredictions.keys()]);
                                     if (!currentPredictions.has(key)) {
                                         const [label, location] = key.split(":");
                                         await speak(`${label} at the ${location} has left field of view.`)
+                                        previousPredictionsRef.current.delete(key);
                                     }
-
-                                    previousPredictionsRef.current.delete(key);
                                 }
 
                                 for (const [key, text] of currentPredictions.entries()) {

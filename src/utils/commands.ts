@@ -10,7 +10,7 @@ export async function startModel(onMessage: (msg: Message) => void): Promise<voi
     return await invoke("start_model", {channel: outputChannel})
 }
 
-export async function sendFrame(frame: string): Promise<void> {
+export async function sendFrame(frame: Uint8Array): Promise<void> {
     return await invoke("send_frame", { frame: frame });
 }
 

@@ -52,7 +52,7 @@ class Status(Message):
 
 @dataclass(slots=True, kw_only=True)
 class Input(Message):
-    image: str
+    image: bytes
     kind: str = "input"
 
 @dataclass(slots=True, kw_only=True)
@@ -124,6 +124,7 @@ def dominant_color(cropped):
     return color_name
 
 def prediction_json(model_output: list[Results], np_img) -> str:
+    print("python: entered prediction_json")
     frame_output = model_output[0]
     raw_predictions: list[RawPrediction] = []
     boxes = frame_output.boxes
@@ -158,17 +159,13 @@ model_path = current_dir / "yolo26n.onnx"
 model = YOLO(str(model_path), task="detect", verbose=False)
 print(Status(message="200 OK"))
 
-def main(img: str):
+def main(img: bytes):
 
     # convert image into correct np array format
-    decoded_bytes = base64.b64decode(img)
-
-    np_arr = np.frombuffer(decoded_bytes, np.uint8)
+    np_arr = np.frombuffer(img, np.uint8)
     np_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-
     # get results
     results_arr = model.predict(np_img, verbose=False)
-
     # send JSON results to stdout
     print(prediction_json(results_arr, np_img))
 
@@ -182,9 +179,9 @@ if __name__ == '__main__':
             print(Error(message=f"Model crashed while running, skipping the frame: {e}\n {trace_string}"))
         sys.exit(0)
     while True:
-        eprint("Reading line...")
+        eprint("python: Reading line...")
         arg = sys.stdin.readline()
-        eprint("Successfully read rust's input")
+        eprint("python: Successfully read rust's input")
         if arg.strip() != "":
             try:
                 data = json.loads(arg)
@@ -203,7 +200,7 @@ if __name__ == '__main__':
                 case "input":
                     model_input = Input(image=data.get("image"))
                     try:
-                        main(model_input.image)
+                        main(bytes(model_input.image))
                     except Exception as e:
                         print(Error(message=f"Model crashed while running, skipping the frame: {e}"))
                         continue

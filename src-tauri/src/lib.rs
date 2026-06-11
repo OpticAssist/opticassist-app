@@ -111,7 +111,7 @@ fn listen_to_model(reader: BufReader<ChildStdout>, channel: Channel<Message>) {
 }
 
 #[tauri::command]
-fn send_frame(frame: String, state: tauri::State<'_, ModelState>) -> Result<(), String> {
+fn send_frame(frame: Vec<u8>, state: tauri::State<'_, ModelState>) -> Result<(), String> {
     println!("rust: Entered send_frame");
     let mut stdin_state = state.stdin.lock().unwrap();
     if let Some(stdin) = stdin_state.as_mut() {
