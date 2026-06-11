@@ -457,12 +457,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "color-name"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2980f82525cf4a0eb43a7dcc1396bbea824897a98ef4948bd150310469acb432"
-
-[[package]]
 name = "combine"
 version = "4.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2309,7 +2303,6 @@ dependencies = [
 name = "opticassist"
 version = "0.1.0"
 dependencies = [
- "color-name",
  "serde",
  "serde_json",
  "tauri",
